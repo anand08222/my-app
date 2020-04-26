@@ -1,0 +1,30 @@
+node {
+    stage('Project Checkout'){
+        git 'https://github.com/anand08222/my-app.git'
+    
+        echo "CODE CHECKOUT SUCCESS"
+    }
+    stage('Maven Package'){
+        def mvnHome = tool name: 'maven-3', type: 'maven'
+        def mvnCMD = "${mvnHome}/bin/mvn"
+        sh label: '', script: "${mvnCMD} clean package"
+
+        echo "MAVEN BUILD SUCCESS"
+    }
+    stage('Build Docker Image'){
+        //def dockerHome = tool name: 'docker-3', type: 'org.jenkinsci.plugins.docker.commons.tools.DockerTool'
+        //def docCMD = "${dockerHome}/bin"
+       // sh label: '', script: "${dockerHome} build -t anand08222/my-app:2.0.0 ."
+       sh label: '', script: 'docker build -t anand08222/my-app:2.0.2 .' 
+       
+       echo "DOCKER IMAGE CREATED SUCCESSFULLY"
+    }
+    stage('Push docker Image'){
+        withCredentials([string(credentialsId: 'docker-Pwd', variable: 'dockerHubPasswd')]) {
+        sh label: '', script: "docker login -u anand08222 -p ${dockerHubPasswd}" 
+    }
+        sh label: '', script: 'docker push anand08222/my-app:2.0.2' 
+        
+        echo "DOCKER IMAGE PUSHED SUCCESSFULLY"
+    }
+}
